@@ -7,6 +7,7 @@ const validateToken = require("../middlewares/validate-token.middleware");
 const AppError = require("../shared/errors/app-error");
 const AppErrorTypes = require("../shared/errors/app-error-types");
 const { CREATED, NOT_FOUND, NO_CONTENT } = require("../shared/http/http-status-code");
+const { createProductSchema, updateProductSchema, idSchema } = require("../schemas/product.schema");
 
 const productsRouter = Router();
 
@@ -21,7 +22,7 @@ productsRouter.get("/", validateToken, async (_req, res) => {
 })
 
 productsRouter.get("/:id", validateToken, async (req, res) => {
-  const { id } = req.params;
+  const { id } = await idSchema.parseAsync(req.params);
 
   const product = await Product.findById(id);
 
@@ -33,7 +34,7 @@ productsRouter.get("/:id", validateToken, async (req, res) => {
 });
 
 productsRouter.post("/", validateToken, async (req, res) => {
-    const productData = req.body;
+    const productData = await createProductSchema.parseAsync(req.body);
     
     const newProduct = new Product(productData);
     const savedProduct = await newProduct.save();
@@ -42,8 +43,9 @@ productsRouter.post("/", validateToken, async (req, res) => {
 });
 
 productsRouter.put("/:id", validateToken, async (req, res) => {
-  const { id } = req.params;
-  const productData = req.body;
+  const { id } = await idSchema.parseAsync(req.params);
+
+  const productData = await updateProductSchema.parseAsync(req.body);
 
   const product = await Product.findByIdAndUpdate(id, productData, { new: true });
 
@@ -55,7 +57,7 @@ productsRouter.put("/:id", validateToken, async (req, res) => {
 });
 
 productsRouter.delete("/:id", validateToken, async (req, res) => {
-    const { id } = req.params;
+    const { id } = await idSchema.parseAsync(req.params);
 
     const removedProduct = await Product.findByIdAndDelete(id);
 
